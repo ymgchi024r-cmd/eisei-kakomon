@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="衛生管理者">
+<meta name="theme-color" content="#ffffff">
+<title>第1種衛生管理者 ○×チェック</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh;}
+.app{max-width:480px;margin:0 auto;padding:12px 12px 80px;}
+
+/* ヘッダー */
+.header{text-align:center;padding:16px 0 12px;}
+.header h1{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:3px;}
+.header p{font-size:12px;color:#888;}
+
+/* タブバー */
+.tab-bar{display:flex;gap:6px;margin-bottom:14px;}
+.tab{flex:1;padding:9px 4px;border:1px solid #e0e0e0;border-radius:10px;background:#fff;font-size:12px;color:#888;cursor:pointer;text-align:center;font-weight:500;}
+.tab.active{background:#fff;color:#1a1a1a;border-color:#1a1a1a;}
+
+/* 統計 */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+.stat{background:#fff;border-radius:10px;padding:10px 4px;text-align:center;border:1px solid #eee;}
+.stat-label{font-size:10px;color:#999;margin-bottom:3px;}
+.stat-value{font-size:20px;font-weight:600;color:#1a1a1a;}
+
+/* プログレス */
+.progress-bar{background:#eee;border-radius:99px;height:5px;margin-bottom:14px;overflow:hidden;}
+.progress-fill{height:100%;background:#16a07a;border-radius:99px;transition:width .4s ease;}
+
+/* ホーム */
+.review-btn{width:100%;padding:13px;border:1.5px solid #e24b4a;border-radius:12px;background:#fff5f5;font-size:13px;font-weight:600;color:#c0392b;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.review-btn:disabled{opacity:.35;cursor:default;}
+
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cat-card{background:#fff;border:1px solid #eee;border-radius:14px;padding:13px;cursor:pointer;transition:transform .12s,box-shadow .12s;border-top-width:3px;}
+.cat-card:active{transform:scale(.97);}
+.cat-name{font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:5px;line-height:1.4;}
+.cat-count{font-size:11px;color:#999;margin-bottom:6px;}
+.cat-bar{height:4px;border-radius:99px;background:#eee;overflow:hidden;}
+.cat-bar-fill{height:100%;border-radius:99px;background:#e24b4a;}
+.cat-wrong{font-size:10px;color:#e24b4a;margin-top:4px;}
+
+/* 問題カード */
+.question-card{background:#fff;border:1px solid #eee;border-radius:16px;padding:16px;margin-bottom:10px;}
+.q-meta{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.badge{font-size:10px;padding:3px 9px;border-radius:99px;font-weight:500;}
+.badge-year{background:#e8f5ee;color:#0f7a52;}
+.badge-cat{background:#e8f0fb;color:#1a56c4;}
+.badge-num{background:#f0f0f0;color:#888;}
+.badge-review{background:#fff0f0;color:#c0392b;}
+.q-stem{font-size:12px;color:#888;line-height:1.7;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;}
+.q-stem strong{color:#555;font-weight:600;}
+.q-branch{font-size:15px;line-height:1.8;color:#1a1a1a;min-height:64px;}
+
+/* ○×ボタン */
+.ox-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.ox-btn{padding:18px 0;border-radius:14px;border:1.5px solid #ddd;background:#fff;font-size:34px;cursor:pointer;transition:transform .1s,background .15s;line-height:1;}
+.ox-btn:active{transform:scale(.94);}
+.ox-btn:disabled{cursor:default;opacity:.45;}
+.ox-btn.correct{background:#e8f5ee;border-color:#16a07a;}
+.ox-btn.wrong{background:#fff0f0;border-color:#e24b4a;}
+
+/* 判定・解説 */
+.result-badge{display:none;margin-top:12px;text-align:center;font-size:13px;font-weight:600;padding:9px;border-radius:10px;}
+.result-badge.ok{background:#e8f5ee;color:#0a6b47;}
+.result-badge.ng{background:#fff0f0;color:#c0392b;}
+.explanation{background:#f9f9f9;border-radius:10px;padding:11px;margin-top:8px;font-size:12px;line-height:1.8;color:#666;display:none;}
+.explanation strong{color:#333;font-weight:600;}
+
+/* 次へボタン */
+.btn-next{width:100%;padding:13px;border:1.5px solid #ddd;border-radius:12px;background:#fff;font-size:14px;font-weight:600;color:#1a1a1a;cursor:pointer;display:none;margin-top:8px;}
+.btn-next:active{background:#f5f5f5;}
+
+/* 戻るボタン */
+.back-btn{font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:0 0 10px;display:flex;align-items:center;gap:4px;}
+
+/* 結果画面 */
+.result-screen{display:none;text-align:center;padding:2rem 1rem;background:#fff;border:1px solid #eee;border-radius:16px;}
+.result-score{font-size:52px;font-weight:700;color:#1a1a1a;margin:1rem 0 .25rem;}
+.result-sub{font-size:13px;color:#888;margin-bottom:1.5rem;}
+.result-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.btn-sm{padding:11px 20px;border:1.5px solid #ddd;border-radius:10px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:#1a1a1a;}
+.btn-sm.danger{border-color:#e24b4a;background:#fff5f5;color:#c0392b;}
+
+.screen{display:none;}
+.screen.active{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>第1種衛生管理者 ○×チェック</h1>
+    <p>各肢が正しければ○、誤りなら×を選択</p>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('home')" id="tab-home">ホーム</button>
+    <button class="tab" onclick="switchTab('quiz')" id="tab-quiz" style="display:none;">問題</button>
+  </div>
+
+  <!-- ホーム画面 -->
+  <div class="screen active" id="screen-home">
+    <button class="review-btn" id="review-start-btn" onclick="startReview()" disabled>
+      ❌ 間違えた問題を復習する（<span id="wrong-count">0</span>問）
+    </button>
+    <div class="cat-grid" id="cat-grid"></div>
+  </div>
+
+  <!-- 問題画面 -->
+  <div class="screen" id="screen-quiz">
+    <button class="back-btn" onclick="goHome()">← ホームへ</button>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">残り</div><div class="stat-value" id="remaining">―</div></div>
+      <div class="stat"><div class="stat-label">正解</div><div class="stat-value" id="correct-count">0</div></div>
+      <div class="stat"><div class="stat-label">不正解</div><div class="stat-value" id="wrong-count-q">0</div></div>
+      <div class="stat"><div class="stat-label">正答率</div><div class="stat-value" id="accuracy">―</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+    <div id="quiz-area">
+      <div class="question-card">
+        <div class="q-meta">
+          <span class="badge badge-year" id="q-year"></span>
+          <span class="badge badge-cat" id="q-cat"></span>
+          <span class="badge badge-num" id="q-num"></span>
+          <span class="badge badge-review" id="q-review" style="display:none;">復習</span>
+        </div>
+        <div class="q-stem" id="q-stem"></div>
+        <div class="q-branch" id="q-branch"></div>
+        <div class="ox-btns">
+          <button class="ox-btn" id="btn-o" onclick="answer(true)">○</button>
+          <button class="ox-btn" id="btn-x" onclick="answer(false)">×</button>
+        </div>
+        <div class="result-badge" id="result-badge"></div>
+        <div class="explanation" id="explanation"></div>
+      </div>
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">次へ →</button>
+    </div>
+
+    <div class="result-screen" id="result-screen">
+      <div style="font-size:13px;color:#999;">セッション終了！</div>
+      <div class="result-score" id="result-score"></div>
+      <div class="result-sub" id="result-sub"></div>
+      <div class="result-actions">
+        <button class="btn-sm" onclick="goHome()">ホームへ</button>
+        <button class="btn-sm danger" id="retry-wrong-btn" onclick="retryWrong()" style="display:none;">間違いを復習</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATS={
+  "関係法令（有害業務）":"法令①",
+  "関係法令（その他）":"法令②",
+  "労働衛生（有害業務）":"衛生①",
+  "労働衛生（その他）":"衛生②",
+  "労働生理":"生理"
+};
+const CAT_COLORS={
+  "関係法令（有害業務）":"#185FA5",
+  "関係法令（その他）":"#0F6E56",
+  "労働衛生（有害業務）":"#993556",
+  "労働衛生（その他）":"#854F0B",
+  "労働生理":"#533AB7"
+};
+
+const Q=[
+  {c:"関係法令（有害業務）",y:"R5",s:"有害業務に係る衛生管理者の選任について",b:"有害業務を行う事業場で常時500人以上の労働者を使用する場合、衛生管理者のうち少なくとも1人を専任としなければならない。",a:true,e:"正しい。労働安全衛生規則第7条により、坑内労働・有害業務に常時500人以上従事する事業場では衛生管理者の専任が必要です。"},
+  {c:"関係法令（有害業務）",y:"R4",s:"特定化学物質障害予防規則について",b:"特定化学物質を製造する事業者は、作業主任者を選任する必要はない。",a:false,e:"誤り。特定化学物質作業主任者の選任は義務です（特化則第27条）。"},
+  {c:"関係法令（有害業務）",y:"R5",s:"有機溶剤中毒予防規則について",b:"有機溶剤業務を行う屋内作業場では、6か月以内ごとに1回、定期に作業環境測定を行わなければならない。",a:true,e:"正しい。有機溶剤中毒予防規則第28条により、6か月以内ごとに1回の作業環境測定が義務付けられています。"},
+  {c:"関係法令（有害業務）",y:"R3",s:"鉛中毒予防規則について",b:"鉛業務に常時従事する労働者に対する健康診断は、1年以内ごとに1回実施しなければならない。",a:false,e:"誤り。鉛健康診断は6か月以内ごとに1回実施しなければなりません（鉛則第53条）。"},
+  {c:"関係法令（有害業務）",y:"R4",s:"電離放射線障害防止規則について",b:"放射線業務従事者の実効線量限度は、5年間で100ミリシーベルトである。",a:true,e:"正しい。電離則第4条により、管理区域内で放射線業務に従事する者の実効線量限度は5年間で100mSvです。"},
+  {c:"関係法令（有害業務）",y:"R5",s:"石綿障害予防規則について",b:"石綿等の取扱いに係る業務は、作業主任者を選任しなくてもよい。",a:false,e:"誤り。石綿作業主任者の選任が義務付けられています（石綿則第19条）。"},
+  {c:"関係法令（有害業務）",y:"R3",s:"特定化学物質健康診断について",b:"特定化学物質健康診断の結果は、5年間保存しなければならない。",a:true,e:"正しい。特化則第40条により、特定化学物質健康診断個人票は5年間保存が必要です（一部30年）。"},
+  {c:"関係法令（有害業務）",y:"R4",s:"騒音障害防止について",b:"強烈な騒音を発する屋内作業場では、6か月以内ごとに1回、作業環境測定を行わなければならない。",a:true,e:"正しい。強烈な騒音を発する屋内作業場は作業環境測定の対象であり、6か月以内ごとに1回実施します。"},
+  {c:"関係法令（有害業務）",y:"R5",s:"酸素欠乏症等防止規則について",b:"酸素欠乏危険作業に係る業務には、特別の教育を行わなければならない。",a:true,e:"正しい。酸欠則第12条により、酸素欠乏危険作業に就かせる労働者に対して特別教育が義務付けられています。"},
+  {c:"関係法令（有害業務）",y:"R3",s:"高気圧作業安全衛生規則について",b:"高圧室内業務に従事する労働者に対する健康診断は、2年以内ごとに1回実施すれば足りる。",a:false,e:"誤り。高気圧業務健康診断は6か月以内ごとに1回実施しなければなりません（高圧則第38条）。"},
+  {c:"関係法令（有害業務）",y:"R4",s:"有機溶剤業務について",b:"第2種有機溶剤等を用いて行う作業では、送気マスクを使用させなければならない。",a:false,e:"誤り。第2種有機溶剤等については、有効な呼吸用保護具または全体換気装置等の設置が必要ですが、必ずしも送気マスクである必要はありません。"},
+  {c:"関係法令（有害業務）",y:"R5",s:"特別有機溶剤等について",b:"特別有機溶剤業務は、特定化学物質障害予防規則の適用を受ける。",a:true,e:"正しい。特別有機溶剤等はその性質から、有機則ではなく特化則の規制を受けます。"},
+  {c:"関係法令（有害業務）",y:"R3",s:"じん肺法について",b:"じん肺管理区分が管理2または管理3と決定された労働者は、一定の業務に就かせることができない。",a:true,e:"正しい。じん肺法第21条により、管理区分に応じて就業禁止または転換の措置が必要です。"},
+  {c:"関係法令（有害業務）",y:"R4",s:"粉じん障害防止規則について",b:"粉じん作業に従事する労働者に対する健康診断は、3年以内ごとに1回実施すれば足りる。",a:false,e:"誤り。粉じん作業従事者の健康診断は、就業時および1年以内ごとに1回実施が必要です。"},
+  {c:"関係法令（有害業務）",y:"R5",s:"VDT作業の規制について",b:"労働安全衛生法では、VDT作業者に対する健康診断の実施が義務付けられている。",a:false,e:"誤り。VDT作業に関する特定の健康診断義務は労働安全衛生法には定められておらず、厚生労働省のガイドラインによる推奨です。"},
+  {c:"関係法令（有害業務）",y:"R3",s:"作業環境測定について",b:"作業環境測定の結果は、一定の記録を作成し3年間保存しなければならない。",a:true,e:"正しい。作業環境測定結果の記録は3年間（特定化学物質等は30年）保存が必要です。"},
+  {c:"関係法令（有害業務）",y:"R4",s:"局所排気装置について",b:"局所排気装置は、1年以内ごとに1回、定期自主検査を行わなければならない。",a:true,e:"正しい。局所排気装置の定期自主検査は1年以内ごとに1回実施が義務付けられています。"},
+  {c:"関係法令（有害業務）",y:"R5",s:"特別教育について",b:"有機溶剤業務に労働者を就かせるときは、特別の教育を行わなければならない。",a:false,e:"誤り。有機溶剤業務自体には特別教育の義務はありませんが、作業主任者の選任は必要です。"},
+  {c:"関係法令（有害業務）",y:"R3",s:"ずい道等建設工事における作業環境測定について",b:"ずい道等の内部で行われる作業では、粉じんの作業環境測定が義務付けられている。",a:true,e:"正しい。ずい道等建設工事での粉じん作業は作業環境測定の対象です。"},
+  {c:"関係法令（有害業務）",y:"R4",s:"熱中症予防について",b:"WBGT値（暑さ指数）は、気温・湿度・輻射熱を考慮した指標である。",a:true,e:"正しい。WBGT（湿球黒球温度）は、湿球温度・黒球温度・乾球温度の3つを組み合わせた熱中症予防の指標です。"},
+  {c:"関係法令（その他）",y:"R5",s:"衛生管理者の選任について",b:"常時50人以上の労働者を使用する事業場では、衛生管理者を選任しなければならない。",a:true,e:"正しい。労働安全衛生法第12条により、常時50人以上の事業場で衛生管理者の選任が義務付けられています。"},
+  {c:"関係法令（その他）",y:"R4",s:"産業医の職務について",b:"産業医は、労働者の健康管理等を行うのに必要な医学に関する知識を有していれば、医師以外でも就任できる。",a:false,e:"誤り。産業医は医師でなければなりません（労働安全衛生法第13条）。"},
+  {c:"関係法令（その他）",y:"R5",s:"労働安全衛生法に基づく健康診断について",b:"雇入れ時の健康診断は、医師が適当と認めるときは、一部の項目を省略することができる。",a:false,e:"誤り。雇入れ時健康診断は省略できません。定期健康診断は35歳未満等の条件で一部省略可能です。"},
+  {c:"関係法令（その他）",y:"R3",s:"ストレスチェック制度について",b:"常時50人以上の労働者を使用する事業者は、ストレスチェックを実施しなければならない。",a:true,e:"正しい。労働安全衛生法第66条の10により、常時50人以上の事業場ではストレスチェックの実施が義務です。"},
+  {c:"関係法令（その他）",y:"R4",s:"衛生委員会について",b:"衛生委員会は、常時50人以上の労働者を使用する事業場に設置しなければならない。",a:true,e:"正しい。労働安全衛生法第18条により、常時50人以上の事業場での衛生委員会設置が義務付けられています。"},
+  {c:"関係法令（その他）",y:"R5",s:"面接指導について",b:"時間外・休日労働時間が1か月に80時間を超えた労働者から申出があった場合、事業者は医師による面接指導を実施しなければならない。",a:true,e:"正しい。労働安全衛生法第66条の8により、月80時間超の時間外・休日労働者への面接指導が義務付けられています。"},
+  {c:"関係法令（その他）",y:"R3",s:"健康診断結果に基づく措置について",b:"健康診断の結果、異常の所見があると診断された場合、必要に応じ就業場所の変更等の措置を講ずるよう努めなければならない。",a:true,e:"正しい。労働安全衛生法第66条の5により、事業者は医師の意見を踏まえ必要な措置を講ずる義務があります。"},
+  {c:"関係法令（その他）",y:"R4",s:"労働基準法の年次有給休暇について",b:"年次有給休暇は、雇入れの日から6か月継続勤務し、全労働日の8割以上出勤した労働者に付与される。",a:true,e:"正しい。労働基準法第39条の規定です。"},
+  {c:"関係法令（その他）",y:"R5",s:"女性労働者の就業制限について",b:"妊娠中の女性は、本人が希望すれば時間外労働・休日労働・深夜業に就かせることができる。",a:false,e:"誤り。妊娠中の女性は請求すれば時間外・休日・深夜業を免除されますが、本人が希望しても事業者は就かせることができません。"},
+  {c:"関係法令（その他）",y:"R3",s:"労働災害の記録・報告について",b:"休業4日以上の労働災害が発生したときは、遅滞なく労働者死傷病報告を所轄労働基準監督署長に提出しなければならない。",a:true,e:"正しい。休業4日以上の場合は遅滞なく提出が必要です。"},
+  {c:"関係法令（その他）",y:"R4",s:"衛生管理者の職務について",b:"衛生管理者は、少なくとも毎週1回、作業場等を巡視しなければならない。",a:true,e:"正しい。労働安全衛生規則第11条により、衛生管理者は少なくとも毎週1回の作業場巡視が義務付けられています。"},
+  {c:"関係法令（その他）",y:"R5",s:"産業医の選任について",b:"常時3,000人を超える労働者を使用する事業場では、産業医を2人以上選任しなければならない。",a:true,e:"正しい。常時3,000人を超える事業場では産業医2人以上の選任が必要です（労働安全衛生規則第13条）。"},
+  {c:"関係法令（その他）",y:"R3",s:"事業者が講ずべき健康保持増進措置について",b:"THP（トータル・ヘルスプロモーション・プラン）の実施は、事業者の努力義務である。",a:true,e:"正しい。労働安全衛生法第69条により、THPの実施は事業者の努力義務とされています。"},
+  {c:"関係法令（その他）",y:"R4",s:"衛生委員会の構成について",b:"衛生委員会の議長は、総括安全衛生管理者または事業の実施を統括管理する者でなければならない。",a:true,e:"正しい。労働安全衛生法第18条第2項による規定です。"},
+  {c:"関係法令（その他）",y:"R5",s:"健康診断の実施時期について",b:"定期健康診断は、1年以内ごとに1回、定期に実施しなければならない。",a:true,e:"正しい。労働安全衛生規則第44条により、一般健康診断は1年以内ごとに1回実施が義務です。"},
+  {c:"関係法令（その他）",y:"R3",s:"休憩に関する労働基準法の規定について",b:"労働時間が8時間を超える場合、少なくとも60分の休憩を与えなければならない。",a:true,e:"正しい。労働基準法第34条により、8時間超の労働には60分以上の休憩が必要です。"},
+  {c:"関係法令（その他）",y:"R4",s:"深夜業に従事する労働者の健康診断について",b:"深夜業に従事する労働者に対する健康診断は、6か月以内ごとに1回実施しなければならない。",a:true,e:"正しい。深夜業従事者は特定業務従事者として、6か月以内ごとに1回の健康診断が必要です。"},
+  {c:"関係法令（その他）",y:"R5",s:"事業場の安全衛生管理体制について",b:"総括安全衛生管理者は、衛生管理者の指揮を受けて衛生に関する業務を統括管理する。",a:false,e:"誤り。総括安全衛生管理者は衛生管理者を指揮する立場にあります（労働安全衛生法第10条）。"},
+  {c:"関係法令（その他）",y:"R3",s:"健康診断結果の保存について",b:"定期健康診断の個人票は、5年間保存しなければならない。",a:true,e:"正しい。労働安全衛生規則第51条により、健康診断個人票は5年間保存が義務付けられています。"},
+  {c:"関係法令（その他）",y:"R4",s:"リスクアセスメントについて",b:"化学物質等の危険性または有害性の調査（リスクアセスメント）の実施は、事業者の義務である。",a:true,e:"正しい。労働安全衛生法第28条の2により、化学物質等や機械等の危険性・有害性調査は事業者の義務です。"},
+  {c:"労働衛生（有害業務）",y:"R5",s:"職業性疾病について",b:"振動工具の使用による手腕振動障害は、レイノー現象（白指）を引き起こすことがある。",a:true,e:"正しい。手腕振動障害の代表的症状がレイノー現象（白ろう病）です。"},
+  {c:"労働衛生（有害業務）",y:"R4",s:"化学物質による健康障害について",b:"ベンゼンは再生不良性貧血や白血病の原因となることがある。",a:true,e:"正しい。ベンゼンは造血障害を引き起こし、再生不良性貧血や白血病のリスクがあります。"},
+  {c:"労働衛生（有害業務）",y:"R5",s:"粉じんによる健康障害について",b:"じん肺は可逆的な疾患であり、粉じん作業から離れれば改善する。",a:false,e:"誤り。じん肺は不可逆的な疾患であり、粉じん作業を離れても症状は進行することがあります。"},
+  {c:"労働衛生（有害業務）",y:"R3",s:"有機溶剤による健康障害について",b:"トルエンは主に神経系に作用し、頭痛・めまい・中枢神経抑制を引き起こす。",a:true,e:"正しい。トルエンは中枢神経抑制作用があり、慢性ばく露で神経障害を引き起こします。"},
+  {c:"労働衛生（有害業務）",y:"R4",s:"騒音による健康障害について",b:"騒音性難聴は4,000Hz付近の高音域から始まることが多い。",a:true,e:"正しい。騒音性難聴はC5dipと呼ばれる4,000Hz付近の聴力低下が特徴的です。"},
+  {c:"労働衛生（有害業務）",y:"R5",s:"電離放射線による健康障害について",b:"放射線による確率的影響には閾値がなく、線量に比例してリスクが増加する。",a:true,e:"正しい。がんや遺伝的影響などの確率的影響は、理論上閾値なく線量に比例してリスクが高まります。"},
+  {c:"労働衛生（有害業務）",y:"R3",s:"熱中症について",b:"熱射病は体温調節機能が破綻した状態であり、意識障害を伴うことがある。",a:true,e:"正しい。熱射病（重症熱中症）は体温調節中枢の機能障害で、意識消失・多臓器不全のリスクがあります。"},
+  {c:"労働衛生（有害業務）",y:"R4",s:"金属による健康障害について",b:"鉛中毒の主な症状には、貧血・腹部疝痛・末梢神経障害がある。",a:true,e:"正しい。鉛は造血障害・消化器症状・神経障害を引き起こします。"},
+  {c:"労働衛生（有害業務）",y:"R5",s:"酸素欠乏症について",b:"酸素濃度が18%未満の環境を酸素欠乏状態という。",a:true,e:"正しい。酸素欠乏症等防止規則では、酸素濃度18%未満を酸素欠乏と定義しています。"},
+  {c:"労働衛生（有害業務）",y:"R3",s:"作業環境管理について",b:"作業環境測定の第1管理区分は、作業環境が最も良好な状態を示す。",a:true,e:"正しい。第1管理区分は管理濃度を大幅に下回る良好な状態です。"},
+  {c:"労働衛生（有害業務）",y:"R4",s:"保護具について",b:"防じんマスクは有害ガスの吸入を防ぐことができる。",a:false,e:"誤り。防じんマスクは粉じんのフィルタリングに用いるものであり、有害ガスの吸入防止には防毒マスクが必要です。"},
+  {c:"労働衛生（有害業務）",y:"R5",s:"有害物質の体内取り込みについて",b:"化学物質の体内への主な取り込み経路は、呼吸器・皮膚・消化器の3経路である。",a:true,e:"正しい。職業性疾病における有害物質の取り込み経路は経気道・経皮・経口の3つです。"},
+  {c:"労働衛生（有害業務）",y:"R3",s:"石綿（アスベスト）について",b:"石綿ばく露から中皮腫の発症まで、潜伏期間は一般に5〜10年程度である。",a:false,e:"誤り。中皮腫の潜伏期間は一般に20〜40年と非常に長いことが特徴です。"},
+  {c:"労働衛生（有害業務）",y:"R4",s:"局所排気装置について",b:"局所排気装置のフードは、発生源にできる限り近い位置に設けることが効果的である。",a:true,e:"正しい。フードは発生源に近いほど少ない排気量で有害物質を捕捉できます。"},
+  {c:"労働衛生（有害業務）",y:"R5",s:"腰痛予防対策について",b:"重量物取扱い作業での腰痛予防では、できるだけ身体を対象物に近づけて持ち上げることが重要である。",a:true,e:"正しい。重心を体幹に近づけることで腰椎への負担を減らせます。"},
+  {c:"労働衛生（有害業務）",y:"R3",s:"一酸化炭素中毒について",b:"一酸化炭素はヘモグロビンとの結合力が、酸素よりも低い。",a:false,e:"誤り。一酸化炭素のヘモグロビンとの親和性は酸素の約200〜250倍であり、非常に強い結合力があります。"},
+  {c:"労働衛生（有害業務）",y:"R4",s:"VDT作業の健康障害について",b:"VDT作業による健康障害には、眼精疲労・頸肩腕障害・腰痛などがある。",a:true,e:"正しい。VDT作業の主要な健康障害です。"},
+  {c:"労働衛生（有害業務）",y:"R5",s:"高温環境下の作業について",b:"WBGT値が高いほど、熱中症のリスクは高まる。",a:true,e:"正しい。WBGTは暑さ指数であり、値が高いほど熱中症リスクが増加します。"},
+  {c:"労働衛生（有害業務）",y:"R3",s:"低温環境下の作業について",b:"低体温症は深部体温が35℃以下に低下した状態をいう。",a:true,e:"正しい。核心温度（深部体温）が35℃未満に低下した状態を低体温症といいます。"},
+  {c:"労働衛生（有害業務）",y:"R4",s:"マンガンによる健康障害について",b:"マンガン中毒では、パーキンソン病に類似した症状（筋固縮・振戦など）が現れることがある。",a:true,e:"正しい。慢性マンガン中毒は中枢神経系に影響し、パーキンソン症状を呈します。"},
+  {c:"労働衛生（その他）",y:"R5",s:"労働衛生の3管理について",b:"労働衛生の3管理とは、作業環境管理・作業管理・健康管理をいう。",a:true,e:"正しい。労働衛生の3管理は作業環境管理・作業管理・健康管理であり、これに安全衛生教育と労働衛生管理体制を加えて5つの柱ともいわれます。"},
+  {c:"労働衛生（その他）",y:"R4",s:"食中毒について",b:"サルモネラ菌による食中毒は、加熱調理した食品からは発生しない。",a:false,e:"誤り。加熱が不十分な場合にはサルモネラ菌が生き残る可能性があります。十分な加熱（75℃・1分以上）が重要です。"},
+  {c:"労働衛生（その他）",y:"R5",s:"労働衛生教育について",b:"雇入れ時の安全衛生教育は、全業種で実施しなければならない。",a:true,e:"正しい。労働安全衛生法第59条により、業種に関わらず雇入れ時の安全衛生教育が義務付けられています。"},
+  {c:"労働衛生（その他）",y:"R3",s:"受動喫煙防止対策について",b:"健康増進法の改正により、多くの施設での屋内喫煙が原則禁止となった。",a:true,e:"正しい。2020年の健康増進法改正により、飲食店等も含め多くの施設での屋内喫煙が原則禁止されています。"},
+  {c:"労働衛生（その他）",y:"R4",s:"メンタルヘルス対策について",b:"4つのケアとは、セルフケア・ラインによるケア・事業場内産業保健スタッフ等によるケア・事業場外資源によるケアをいう。",a:true,e:"正しい。厚生労働省のメンタルヘルス指針に定める4つのケアです。"},
+  {c:"労働衛生（その他）",y:"R5",s:"健康増進活動について",b:"BMI（体格指数）は体重（kg）を身長（m）で除した値である。",a:false,e:"誤り。BMIは体重（kg）を身長（m）の2乗で除した値です（体重÷身長²）。"},
+  {c:"労働衛生（その他）",y:"R3",s:"救急処置について",b:"AED（自動体外式除細動器）は、心室細動に対して有効である。",a:true,e:"正しい。AEDは心室細動・無脈性心室頻拍に対して電気ショックを行う装置です。"},
+  {c:"労働衛生（その他）",y:"R4",s:"感染症の予防について",b:"インフルエンザウイルスは主に飛沫感染・接触感染によって伝播する。",a:true,e:"正しい。インフルエンザの主な感染経路は飛沫感染と接触感染です。"},
+  {c:"労働衛生（その他）",y:"R5",s:"脳・心臓疾患の予防について",b:"過重労働による健康障害防止のため、時間外・休日労働は月45時間以内が望ましいとされている。",a:true,e:"正しい。時間外労働が月45時間を超えると脳・心臓疾患のリスクが高まるとされています。"},
+  {c:"労働衛生（その他）",y:"R3",s:"熱中症の救急処置について",b:"熱中症が疑われる場合、意識がある患者にはスポーツドリンクなどで水分・塩分を補給させる。",a:true,e:"正しい。軽症〜中等症の場合は経口補水が有効です。意識障害がある場合は医療機関への搬送が優先されます。"},
+  {c:"労働衛生（その他）",y:"R4",s:"疾病予防の区分について",b:"定期健康診断は、第2次予防（早期発見・早期治療）に当たる。",a:true,e:"正しい。健康診断による早期発見は第2次予防です。"},
+  {c:"労働衛生（その他）",y:"R5",s:"骨粗しょう症について",b:"骨粗しょう症は女性に多く、閉経後にリスクが高まる。",a:true,e:"正しい。閉経後のエストロゲン減少により骨密度が低下し、骨粗しょう症のリスクが高まります。"},
+  {c:"労働衛生（その他）",y:"R3",s:"情報機器作業のガイドラインについて",b:"一連続作業時間が1時間を超えないようにし、次の連続作業までの間に10〜15分の作業休止時間を設けることが推奨される。",a:true,e:"正しい。厚生労働省の情報機器作業における労働衛生管理のためのガイドラインの内容です。"},
+  {c:"労働衛生（その他）",y:"R4",s:"労働衛生統計について",b:"業務上疾病で最も多いのは、負傷に起因する疾病（災害性腰痛等）である。",a:true,e:"正しい。業務上疾病の中では負傷に起因する疾病が最多を占めています。"},
+  {c:"労働衛生（その他）",y:"R5",s:"禁煙支援について",b:"ニコチン依存度の評価には、TDS（タバコ依存スクリーニングテスト）が用いられる。",a:true,e:"正しい。TDSは10項目のニコチン依存症評価ツールで、禁煙治療の保険適用判断にも使われます。"},
+  {c:"労働衛生（その他）",y:"R3",s:"糖尿病の予防について",b:"HbA1cは過去1〜2か月間の平均血糖値を反映する指標である。",a:true,e:"正しい。HbA1c（グリコヘモグロビン）は赤血球の寿命に対応した約1〜2か月の平均血糖値を反映します。"},
+  {c:"労働衛生（その他）",y:"R4",s:"腰痛予防対策について",b:"非特異的腰痛は原因が明確でない腰痛であり、全腰痛の約85%を占めるとされる。",a:true,e:"正しい。多くの腰痛は画像等で原因特定できない非特異的腰痛です。"},
+  {c:"労働衛生（その他）",y:"R5",s:"過重労働の健康影響について",b:"長時間労働は、うつ病などのメンタルヘルス不調のリスク要因となる。",a:true,e:"正しい。長時間労働は疲労の蓄積・睡眠不足をもたらし、メンタルヘルス不調のリスクを高めます。"},
+  {c:"労働衛生（その他）",y:"R3",s:"睡眠と健康について",b:"交代制勤務（シフト勤務）は、睡眠障害・消化器疾患のリスクを高めることがある。",a:true,e:"正しい。概日リズムの乱れにより様々な健康障害リスクが高まります。"},
+  {c:"労働衛生（その他）",y:"R4",s:"特定保健指導について",b:"メタボリックシンドロームの腹囲基準は、男性85cm以上、女性90cm以上である。",a:true,e:"正しい。特定健診・特定保健指導で用いられるメタボ診断の腹囲基準値です。"},
+  {c:"労働生理",y:"R5",s:"神経系について",b:"自律神経系は、交感神経と副交感神経からなる。",a:true,e:"正しい。自律神経は交感神経（緊張・興奮時）と副交感神経（安静・休息時）の二重支配が基本です。"},
+  {c:"労働生理",y:"R4",s:"血液について",b:"血液の成分のうち、酸素を運搬する役割を担うのは赤血球である。",a:true,e:"正しい。赤血球内のヘモグロビンが酸素と結合して全身に運搬します。"},
+  {c:"労働生理",y:"R5",s:"呼吸について",b:"成人の安静時の呼吸数は、通常1分間に15〜20回である。",a:true,e:"正しい。成人安静時の正常呼吸数は15〜20回/分です。"},
+  {c:"労働生理",y:"R3",s:"心臓について",b:"心臓の拍動は、洞房結節（洞結節）で発生した電気信号によって調節されている。",a:true,e:"正しい。洞房結節はペースメーカーとも呼ばれ、心臓の正常リズムを作り出します。"},
+  {c:"労働生理",y:"R4",s:"消化と吸収について",b:"小腸は消化・吸収の主な場であり、食物の栄養素の大部分はここで吸収される。",a:true,e:"正しい。小腸（特に空腸・回腸）は消化・吸収の中心的な場所です。"},
+  {c:"労働生理",y:"R5",s:"肝臓の機能について",b:"肝臓はグリコーゲンを合成・貯蔵し、必要に応じてグルコースとして放出する。",a:true,e:"正しい。肝臓は血糖調節の重要な臓器であり、グリコーゲンの合成・貯蔵・分解を行います。"},
+  {c:"労働生理",y:"R3",s:"腎臓と尿の生成について",b:"腎臓では原尿が生成され、そのほぼ全量が再吸収されて尿となる。",a:false,e:"誤り。1日に約150Lの原尿が生成されますが、最終的な尿量は約1.5Lです。再吸収されるのは約99%です。"},
+  {c:"労働生理",y:"R4",s:"体温調節について",b:"体温が上昇すると、皮膚血管が拡張して熱放散が増加する。",a:true,e:"正しい。高体温時は皮膚血管拡張・発汗により熱を放散して体温を下げます。"},
+  {c:"労働生理",y:"R5",s:"感覚器について",b:"眼の水晶体は毛様体筋の収縮・弛緩によって厚さが変わり、焦点調節を行う。",a:true,e:"正しい。近くを見るとき毛様体筋が収縮し水晶体が厚くなります。"},
+  {c:"労働生理",y:"R3",s:"筋肉について",b:"筋収縮のエネルギー源として、最初に利用されるのはATP（アデノシン三リン酸）である。",a:true,e:"正しい。筋収縮の直接エネルギー源はATPです。"},
+  {c:"労働生理",y:"R4",s:"疲労について",b:"精神的疲労（中枢性疲労）は、主に大脳皮質の機能低下として現れる。",a:true,e:"正しい。精神疲労は中枢神経系、特に大脳皮質の機能低下が主因です。"},
+  {c:"労働生理",y:"R5",s:"ストレス反応について",b:"ストレスがかかるとコルチゾールなどのストレスホルモンが分泌される。",a:true,e:"正しい。副腎皮質から分泌されるコルチゾールは代表的なストレスホルモンです。"},
+  {c:"労働生理",y:"R3",s:"免疫について",b:"白血球のうちリンパ球は、抗体産生に関わるB細胞と細胞性免疫に関わるT細胞に分けられる。",a:true,e:"正しい。B細胞（液性免疫）とT細胞（細胞性免疫）はリンパ球の主要なサブセットです。"},
+  {c:"労働生理",y:"R4",s:"睡眠について",b:"レム睡眠中は夢を見ることが多く、筋肉の緊張が高まった状態である。",a:false,e:"誤り。レム睡眠中は骨格筋の緊張が低下（弛緩）しています。これは夢の内容に合わせた動作を防ぐためです。"},
+  {c:"労働生理",y:"R5",s:"血圧について",b:"血圧は心臓の収縮力・血液量・末梢血管抵抗によって決まる。",a:true,e:"正しい。血圧＝心拍出量×末梢血管抵抗で表され、心臓・血液・血管の三要素が関与します。"},
+  {c:"労働生理",y:"R3",s:"呼吸器系について",b:"肺胞は肺の最小単位で、ここでガス交換（酸素と二酸化炭素の交換）が行われる。",a:true,e:"正しい。肺胞は薄い壁を通じて毛細血管との間でガス交換を行います。"},
+  {c:"労働生理",y:"R4",s:"体液について",b:"体液は体重の約60%を占め、細胞内液と細胞外液に分けられる。",a:true,e:"正しい。成人男性の体液量は体重の約60%で、細胞内液40%・細胞外液20%です。"},
+  {c:"労働生理",y:"R5",s:"内分泌系について",b:"インスリンは膵臓のランゲルハンス島α細胞から分泌される。",a:false,e:"誤り。インスリンは膵臓のランゲルハンス島β（ベータ）細胞から分泌されます。α細胞はグルカゴンを分泌します。"},
+  {c:"労働生理",y:"R3",s:"聴覚について",b:"高音（高周波数）域の聴力低下は加齢性難聴でみられる一般的な変化である。",a:true,e:"正しい。加齢性難聴では高音域から聴力が低下する傾向があります。"},
+  {c:"労働生理",y:"R4",s:"皮膚の機能について",b:"皮膚は体温調節・知覚・保護・ビタミンD合成などの機能を持つ。",a:true,e:"正しい。皮膚は多様な機能を持つ重要な器官です。"}
+];
+
+let wrongIds=new Set(JSON.parse(localStorage.getItem('wrongIds')||'[]'));
+let sessionOrder=[],sessionIdx=0,sessionCorrect=0,sessionWrong=0,sessionAnswered=false,isReviewMode=false;
+
+function saveWrong(){localStorage.setItem('wrongIds',JSON.stringify([...wrongIds]));}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function buildHome(){
+  const grid=document.getElementById('cat-grid');
+  grid.innerHTML='';
+  Object.keys(CATS).forEach(cat=>{
+    const items=Q.map((q,i)=>({q,i})).filter(x=>x.q.c===cat);
+    const total=items.length;
+    const wrong=items.filter(x=>wrongIds.has(x.i)).length;
+    const card=document.createElement('div');
+    card.className='cat-card';
+    card.style.borderTopColor=CAT_COLORS[cat];
+    card.innerHTML=`<div class="cat-name">${cat}</div><div class="cat-count">${total}問</div><div class="cat-bar"><div class="cat-bar-fill" style="width:${wrong>0?Math.round(wrong/total*100):0}%"></div></div><div class="cat-wrong">${wrong>0?`間違い ${wrong}問`:' '}</div>`;
+    card.onclick=()=>startCat(cat);
+    grid.appendChild(card);
+  });
+  updateWrongBtn();
+}
+
+function updateWrongBtn(){
+  const cnt=wrongIds.size;
+  document.getElementById('wrong-count').textContent=cnt;
+  document.getElementById('review-start-btn').disabled=cnt===0;
+}
+
+function startCat(cat){
+  isReviewMode=false;
+  sessionOrder=shuffle(Q.map((_,i)=>i).filter(i=>Q[i].c===cat));
+  startSession();
+}
+
+function startReview(){
+  isReviewMode=true;
+  sessionOrder=shuffle([...wrongIds]);
+  startSession();
+}
+
+function retryWrong(){
+  isReviewMode=true;
+  sessionOrder=shuffle([...wrongIds]);
+  startSession();
+}
+
+function startSession(){
+  sessionIdx=0;sessionCorrect=0;sessionWrong=0;sessionAnswered=false;
+  document.getElementById('quiz-area').style.display='block';
+  document.getElementById('result-screen').style.display='none';
+  switchTab('quiz');
+  loadQ();
+}
+
+function loadQ(){
+  const q=Q[sessionOrder[sessionIdx]];
+  document.getElementById('q-year').textContent=q.y;
+  document.getElementById('q-cat').textContent=CATS[q.c]||q.c;
+  document.getElementById('q-num').textContent=`${sessionIdx+1}/${sessionOrder.length}`;
+  document.getElementById('q-review').style.display=isReviewMode?'inline-block':'none';
+  document.getElementById('q-stem').innerHTML=`<strong>【問】</strong>${q.s}`;
+  document.getElementById('q-branch').textContent=q.b;
+  ['btn-o','btn-x'].forEach(id=>{const b=document.getElementById(id);b.className='ox-btn';b.disabled=false;});
+  document.getElementById('result-badge').style.display='none';
+  document.getElementById('explanation').style.display='none';
+  document.getElementById('btn-next').style.display='none';
+  document.getElementById('progress').style.width=Math.round(sessionIdx/sessionOrder.length*100)+'%';
+  document.getElementById('remaining').textContent=sessionOrder.length-sessionIdx;
+  sessionAnswered=false;
+}
+
+function answer(isTrue){
+  if(sessionAnswered)return;
+  sessionAnswered=true;
+  const qIdx=sessionOrder[sessionIdx];
+  const q=Q[qIdx];
+  const isCorrect=isTrue===q.a;
+  document.getElementById('btn-o').disabled=true;
+  document.getElementById('btn-x').disabled=true;
+  if(isTrue)document.getElementById('btn-o').classList.add(isCorrect?'correct':'wrong');
+  else document.getElementById('btn-x').classList.add(isCorrect?'correct':'wrong');
+  if(isCorrect){sessionCorrect++;wrongIds.delete(qIdx);}
+  else{sessionWrong++;wrongIds.add(qIdx);}
+  saveWrong();
+  const rb=document.getElementById('result-badge');
+  rb.style.display='block';
+  if(isCorrect){rb.className='result-badge ok';rb.textContent='正解！';}
+  else{rb.className='result-badge ng';rb.textContent=`不正解　正解は${q.a?'○':'×'}`;}
+  document.getElementById('explanation').innerHTML=`<strong>解説：</strong>${q.e}`;
+  document.getElementById('explanation').style.display='block';
+  document.getElementById('correct-count').textContent=sessionCorrect;
+  document.getElementById('wrong-count-q').textContent=sessionWrong;
+  document.getElementById('accuracy').textContent=Math.round(sessionCorrect/(sessionIdx+1)*100)+'%';
+  const nb=document.getElementById('btn-next');
+  nb.style.display='block';
+  nb.textContent=sessionIdx<sessionOrder.length-1?'次へ →':'結果を見る →';
+}
+
+function nextQuestion(){
+  sessionIdx++;
+  if(sessionIdx>=sessionOrder.length)showResult();
+  else loadQ();
+}
+
+function showResult(){
+  document.getElementById('quiz-area').style.display='none';
+  document.getElementById('result-screen').style.display='block';
+  const total=sessionOrder.length;
+  const pct=Math.round(sessionCorrect/total*100);
+  document.getElementById('result-score').textContent=`${sessionCorrect}/${total}`;
+  document.getElementById('result-sub').textContent=`正答率 ${pct}%　${pct>=80?'合格圏内！':pct>=60?'もう少し！':'要復習'}`;
+  document.getElementById('progress').style.width='100%';
+  const rwb=document.getElementById('retry-wrong-btn');
+  rwb.style.display=sessionWrong>0?'inline-block':'none';
+  if(sessionWrong>0)rwb.textContent=`間違い${sessionWrong}問を復習`;
+  updateWrongBtn();
+}
+
+function goHome(){switchTab('home');buildHome();}
+
+function switchTab(name){
+  document.getElementById('screen-home').classList.toggle('active',name==='home');
+  document.getElementById('screen-quiz').classList.toggle('active',name==='quiz');
+  document.getElementById('tab-home').classList.toggle('active',name==='home');
+  document.getElementById('tab-quiz').style.display=name==='quiz'?'block':'none';
+  document.getElementById('tab-quiz').classList.toggle('active',name==='quiz');
+}
+
+buildHome();
+</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
+</body>
+</html>
