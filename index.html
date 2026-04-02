@@ -350,12 +350,13 @@ body{
 </div><!-- /.app -->
 
 <script>
-const CATS={
-  "労働衛生（有害業務）":{short:"衛生①有害",color:"#D4537E",bar:"#D4537E"},
-  "労働衛生（有害業務以外）":{short:"衛生②以外",color:"#EF9F27",bar:"#EF9F27"},
-  "関係法令（有害業務）":{short:"法令①有害",color:"#1e6fb5",bar:"#1e6fb5"},
-  "関係法令（有害業務以外）":{short:"法令②以外",color:"#1D9E75",bar:"#1D9E75"},
-  "労働生理":{short:"労働生理",color:"#7F77DD",bar:"#7F77DD"}
+const STORAGE_KEY = 'eisei_quiz_app_v2';
+const CATS = {
+  "労働衛生（有害業務）": { short: "衛生①有害", color: "#D4537E", bar: "#D4537E" },
+  "労働衛生（有害業務以外）": { short: "衛生②以外", color: "#EF9F27", bar: "#EF9F27" },
+  "関係法令（有害業務）": { short: "法令①有害", color: "#1e6fb5", bar: "#1e6fb5" },
+  "関係法令（有害業務以外）": { short: "法令②以外", color: "#1D9E75", bar: "#1D9E75" },
+  "労働生理": { short: "労働生理", color: "#7F77DD", bar: "#7F77DD" }
 };
 
 const Q=[
@@ -461,225 +462,90 @@ const Q=[
   {c:"労働生理",y:"R4",s:"皮膚の機能について",b:"皮膚は体温調節・知覚・保護・ビタミンD合成などの機能を持つ。",a:true,e:"正しい。皮膚は多様な機能を持つ重要な器官です。"}
 ];
 
-let wrongIds=new Set(JSON.parse(localStorage.getItem('wrongIds')||'[]'));
-let bookmarkIds=new Set(JSON.parse(localStorage.getItem('bookmarkIds')||'[]'));
-let catStats=JSON.parse(localStorage.getItem('catStats')||'{}');
-let totalAnswered=parseInt(localStorage.getItem('totalAnswered')||'0');
-let totalCorrect=parseInt(localStorage.getItem('totalCorrect')||'0');
-let examDate=localStorage.getItem('examDate')||'';
-let sessionOrder=[],sessionIdx=0,sessionCorrect=0,sessionWrong=0,sessionAnswered=false,isReviewMode=false,catOpen=false;
-
-function save(){
-  localStorage.setItem('wrongIds',JSON.stringify([...wrongIds]));
-  localStorage.setItem('bookmarkIds',JSON.stringify([...bookmarkIds]));
-  localStorage.setItem('catStats',JSON.stringify(catStats));
-  localStorage.setItem('totalAnswered',totalAnswered);
-  localStorage.setItem('totalCorrect',totalCorrect);
-}
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-
-/* 試験日カウントダウン */
-function showDatePicker(){
-  const inp=document.getElementById('exam-date-input');
-  inp.style.display=inp.style.display==='none'?'block':'none';
-  if(examDate)inp.value=examDate;
-}
-function setExamDate(val){
-  examDate=val;localStorage.setItem('examDate',val);
-  document.getElementById('exam-date-input').style.display='none';
-  updateCountdown();
-}
-function updateCountdown(){
-  const el=document.getElementById('countdown-days');
-  const btn=document.getElementById('set-date-btn');
-  if(!examDate){el.textContent='―';btn.textContent='試験日を設定';return;}
-  const today=new Date();today.setHours(0,0,0,0);
-  const exam=new Date(examDate);
-  const diff=Math.ceil((exam-today)/(1000*60*60*24));
-  el.textContent=diff>=0?diff:'終了';
-  btn.textContent=new Date(examDate).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'})+'に変更';
+const state = {
+  }
 }
 
-/* 科目別グラフ */
-function buildGraph(){
-  const body=document.getElementById('graph-body');
-  body.innerHTML='';
-  Object.keys(CATS).forEach(cat=>{
-    const st=catStats[cat]||{a:0,t:0};
-    const pct=st.t>0?Math.round(st.a/st.t*100):0;
-    const col=CATS[cat].bar;
-    const row=document.createElement('div');
-    row.className='graph-row';
-    row.innerHTML=`<div class="graph-cat">${CATS[cat].short}</div><div class="graph-bar-wrap"><div class="graph-bar-fill" style="width:${pct}%;background:${col};"></div></div><div class="graph-pct" style="color:${pct>=80?'#1D9E75':pct>=60?'#EF9F27':'#e24b4a'}">${pct}%</div><div class="graph-count">${st.t}問</div>`;
-    body.appendChild(row);
-  });
+function toggleBookmark() {
+  const qIdx = getCurrentQuestionIndex();
+  if (state.bookmarkIds.has(qIdx)) {
+    state.bookmarkIds.delete(qIdx);
+  } else {
+    state.bookmarkIds.add(qIdx);
+  }
+  $('bm-btn').style.opacity = state.bookmarkIds.has(qIdx) ? '1' : '0.4';
+  saveStorage();
 }
 
-/* ホーム構築 */
-function buildHome(){
-  updateCountdown();buildGraph();
-  document.getElementById('h-wrong').textContent=wrongIds.size;
-  document.getElementById('h-acc').textContent=totalAnswered>0?Math.round(totalCorrect/totalAnswered*100)+'%':'―';
-  const panel=document.getElementById('cat-panel');
-  panel.innerHTML='';
-  Object.keys(CATS).forEach(cat=>{
-    const total=Q.filter(q=>q.c===cat).length;
-    const wrong=Q.map((q,i)=>({q,i})).filter(x=>x.q.c===cat&&wrongIds.has(x.i)).length;
-    const st=catStats[cat]||{a:0,t:0};
-    const pct=st.t>0?Math.round(st.a/st.t*100):0;
-    const item=document.createElement('div');
-    item.className='cat-item';
-    item.innerHTML=`<div class="cat-dot" style="background:${CATS[cat].bar};"></div><div class="cat-item-name">${cat}</div><div class="cat-item-pct" style="color:${CATS[cat].color};">${pct}%</div>${wrong>0?`<span class="cat-wrong-badge">✕${wrong}</span>`:''}<div class="cat-item-count">${total}問</div>`;
-    item.onclick=()=>startCat(cat);
-    panel.appendChild(item);
-  });
-  const wc=wrongIds.size;
-  document.getElementById('review-count').textContent=wc+'問';
-  document.getElementById('review-card').classList.toggle('disabled',wc===0);
-  const bc=bookmarkIds.size;
-  document.getElementById('bm-count').textContent=bc+'問';
-  document.getElementById('bm-card').classList.toggle('disabled',bc===0);
-}
+function showBookmarks() {
+  if (state.bookmarkIds.size === 0) return;
 
-function toggleCat(){
-  catOpen=!catOpen;
-  document.getElementById('cat-panel').classList.toggle('open',catOpen);
-  document.getElementById('cat-arrow').textContent=catOpen?'∨':'›';
-}
+  const list = $('bm-list');
+  list.innerHTML = '';
 
-/* セッション開始 */
-function startRandom(){isReviewMode=false;sessionOrder=shuffle(Q.map((_,i)=>i));startSession('ランダム');}
-function startCat(cat){isReviewMode=false;sessionOrder=shuffle(Q.map((_,i)=>i).filter(i=>Q[i].c===cat));startSession(cat);}
-function startReview(){if(wrongIds.size===0)return;isReviewMode=true;sessionOrder=shuffle([...wrongIds]);startSession('復習モード');}
-function retryWrong(){if(wrongIds.size===0){goHome();return;}isReviewMode=true;sessionOrder=shuffle([...wrongIds]);startSession('復習モード');}
+  const title = document.createElement('div');
+  title.className = 'bm-title';
+  title.textContent = '🔖 ブックマーク済み問題';
+  list.appendChild(title);
 
-function startSession(title){
-  sessionIdx=0;sessionCorrect=0;sessionWrong=0;sessionAnswered=false;
-  document.getElementById('quiz-title').textContent=title;
-  document.getElementById('quiz-area').style.display='block';
-  document.getElementById('result-screen').style.display='none';
-  document.getElementById('screen-home').style.display='none';
-  document.getElementById('screen-bookmark').style.display='none';
-  document.getElementById('screen-quiz').style.display='block';
-  document.getElementById('fixed-bottom').style.display='block';
-  document.getElementById('ox-btns').style.display='grid';
-  document.getElementById('btn-next').style.display='none';
-  loadQ();
-}
+  [...state.bookmarkIds].forEach(idx => {
+    const q = Q[idx];
+    const div = document.createElement('div');
+    div.className = 'bm-item';
 
-function loadQ(){
-  const qIdx=sessionOrder[sessionIdx];
-  const q=Q[qIdx];
-  document.getElementById('quiz-num').textContent=`${sessionIdx+1}/${sessionOrder.length}`;
-  document.getElementById('q-year').textContent=q.y;
-  document.getElementById('q-cat').textContent=CATS[q.c]?CATS[q.c].short:q.c;
-  document.getElementById('q-rev').style.display=isReviewMode?'inline-block':'none';
-  document.getElementById('q-stem').innerHTML=`<strong>【問】</strong>${q.s}`;
-  document.getElementById('q-branch').textContent=q.b;
-  document.getElementById('bm-btn').style.opacity=bookmarkIds.has(qIdx)?'1':'0.4';
-  const bo=document.getElementById('btn-o'),bx=document.getElementById('btn-x');
-  bo.className='ox-btn';bo.disabled=false;
-  bx.className='ox-btn';bx.disabled=false;
-  document.getElementById('result-badge').style.display='none';
-  document.getElementById('explanation').style.display='none';
-  document.getElementById('ox-btns').style.display='grid';
-  document.getElementById('btn-next').style.display='none';
-  document.getElementById('prog').style.width=Math.round(sessionIdx/sessionOrder.length*100)+'%';
-  document.getElementById('sc').textContent=sessionCorrect;
-  document.getElementById('sw').textContent=sessionWrong;
-  document.getElementById('sa').textContent=sessionIdx>0?Math.round(sessionCorrect/sessionIdx*100)+'%':'―';
-  sessionAnswered=false;
-  /* カードの先頭にスクロール */
-  window.scrollTo({top:0,behavior:'smooth'});
-}
+    const cat = document.createElement('div');
+    cat.className = 'bm-item-cat';
+    cat.textContent = `${q.c} · ${q.y}`;
 
-function toggleBookmark(){
-  const qIdx=sessionOrder[sessionIdx];
-  if(bookmarkIds.has(qIdx))bookmarkIds.delete(qIdx);
-  else bookmarkIds.add(qIdx);
-  document.getElementById('bm-btn').style.opacity=bookmarkIds.has(qIdx)?'1':'0.4';
-  save();
-}
+    const text = document.createElement('div');
+    text.className = 'bm-item-text';
+    text.textContent = q.b;
 
-function answer(isTrue){
-  if(sessionAnswered)return;
-  sessionAnswered=true;
-  const qIdx=sessionOrder[sessionIdx];
-  const q=Q[qIdx];
-  const ok=isTrue===q.a;
-  const bo=document.getElementById('btn-o'),bx=document.getElementById('btn-x');
-  bo.disabled=true;bx.disabled=true;
-  if(isTrue)bo.classList.add(ok?'correct':'wrong');
-  else bx.classList.add(ok?'correct':'wrong');
-  if(ok){sessionCorrect++;wrongIds.delete(qIdx);}
-  else{sessionWrong++;wrongIds.add(qIdx);}
-  if(!catStats[q.c])catStats[q.c]={a:0,t:0};
-  catStats[q.c].t++;if(ok)catStats[q.c].a++;
-  totalAnswered++;if(ok)totalCorrect++;
-  save();
-  const rb=document.getElementById('result-badge');
-  rb.style.display='block';rb.className='result-badge '+(ok?'ok':'ng');
-  rb.textContent=ok?'✅ 正解！':`❌ 不正解　正解は${q.a?'○':'×'}`;
-  document.getElementById('explanation').innerHTML=`<strong>解説：</strong>${q.e}`;
-  document.getElementById('explanation').style.display='block';
-  document.getElementById('sc').textContent=sessionCorrect;
-  document.getElementById('sw').textContent=sessionWrong;
-  document.getElementById('sa').textContent=Math.round(sessionCorrect/(sessionIdx+1)*100)+'%';
-  /* 固定ボタンを「次へ」に切り替え */
-  document.getElementById('ox-btns').style.display='none';
-  const nb=document.getElementById('btn-next');
-  nb.style.display='block';
-  nb.textContent=sessionIdx<sessionOrder.length-1?'次へ →':'結果を見る →';
-}
-
-function nextQ(){
-  sessionIdx++;
-  if(sessionIdx>=sessionOrder.length)showResult();
-  else loadQ();
-}
-
-function showResult(){
-  document.getElementById('quiz-area').style.display='none';
-  document.getElementById('result-screen').style.display='block';
-  document.getElementById('fixed-bottom').style.display='none';
-  const total=sessionOrder.length;
-  const pct=Math.round(sessionCorrect/total*100);
-  document.getElementById('rs-score').textContent=`${sessionCorrect}/${total}`;
-  document.getElementById('rs-msg').textContent=pct>=80?'🎉 合格圏内です！':pct>=60?'もう少し！':'要復習';
-  document.getElementById('rs-sub').textContent=`正答率 ${pct}%`;
-  document.getElementById('prog').style.width='100%';
-  const rb=document.getElementById('rs-retry');
-  rb.style.display=sessionWrong>0?'block':'none';
-  if(sessionWrong>0)rb.textContent=`間違えた${sessionWrong}問を復習`;
-}
-
-/* ブックマーク一覧 */
-function showBookmarks(){
-  if(bookmarkIds.size===0)return;
-  document.getElementById('screen-home').style.display='none';
-  document.getElementById('screen-quiz').style.display='none';
-  document.getElementById('screen-bookmark').style.display='block';
-  const list=document.getElementById('bm-list');
-  list.innerHTML='<div class="bm-title">🔖 ブックマーク済み問題</div>';
-  [...bookmarkIds].forEach(idx=>{
-    const q=Q[idx];
-    const div=document.createElement('div');
-    div.className='bm-item';
-    div.innerHTML=`<div class="bm-item-cat">${q.c} · ${q.y}</div><div class="bm-item-text">${q.b}</div>`;
-    div.onclick=()=>{isReviewMode=false;sessionOrder=[idx];startSession('ブックマーク');};
+    div.appendChild(cat);
+    div.appendChild(text);
+    div.onclick = () => startBookmarkSession(idx);
     list.appendChild(div);
   });
+
+  showScreen('bookmark');
 }
 
-function goHome(){
-  document.getElementById('screen-quiz').style.display='none';
-  document.getElementById('screen-bookmark').style.display='none';
-  document.getElementById('screen-home').style.display='block';
+function goHome() {
+  showScreen('home');
   buildHome();
 }
 
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
-buildHome();
+function backFromQuiz() {
+  if (state.session.source === 'bookmark') {
+    showBookmarks();
+    return;
+  }
+  goHome();
+}
+
+function bindEvents() {
+  $('btn-o').onclick = () => answer(true);
+  $('btn-x').onclick = () => answer(false);
+  $('btn-next').onclick = nextQ;
+  $('bm-btn').onclick = toggleBookmark;
+
+  const backButtons = document.querySelectorAll('.quiz-back');
+  if (backButtons[0]) backButtons[0].onclick = goHome;
+  if (backButtons[1]) backButtons[1].onclick = backFromQuiz;
+}
+
+function init() {
+  loadStorage();
+  bindEvents();
+  buildHome();
+  showScreen('home');
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
+init();
 </script>
 </body>
 </html>
