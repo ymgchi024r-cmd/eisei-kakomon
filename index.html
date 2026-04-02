@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="衛生管理者">
 <meta name="theme-color" content="#1e6fb5">
-<title>第1種衛生管理者 ○×チェック</title>
+<title>第１種衛生管理者 一問一答問題集</title>
 <link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -64,7 +64,7 @@ body{
 .graph-title{font-size:13px;font-weight:700;margin-bottom:12px;color:#1e6fb5;}
 .graph-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .graph-row:last-child{margin-bottom:0;}
-.graph-cat{font-size:10px;color:#666;width:58px;flex-shrink:0;line-height:1.3;}
+.graph-cat{font-size:11px;color:#444;font-weight:500;width:155px;flex-shrink:0;line-height:1.4;}
 .graph-bar-wrap{flex:1;background:#e8f0fb;border-radius:99px;height:9px;overflow:hidden;}
 .graph-bar-fill{height:100%;border-radius:99px;transition:width .6s ease;}
 .graph-pct{font-size:11px;font-weight:700;width:34px;text-align:right;flex-shrink:0;}
@@ -72,7 +72,7 @@ body{
 
 /* ===== ホームモード選択 ===== */
 .home-body{padding:10px 10px 80px;}
-.mode-label{font-size:11px;font-weight:600;color:#5a7fa0;letter-spacing:.06em;margin-bottom:8px;margin-top:14px;}
+.mode-label{font-size:13px;font-weight:700;color:#5a7fa0;letter-spacing:.06em;margin-bottom:8px;margin-top:14px;}
 .mode-cards{display:flex;flex-direction:column;gap:8px;}
 .mode-card{
   background:#fff;border-radius:16px;padding:14px 15px;
@@ -86,9 +86,9 @@ body{
 .mode-card.disabled:active{transform:none;}
 .mode-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;}
 .mode-info{flex:1;}
-.mode-name{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:1px;}
-.mode-desc{font-size:11px;color:#888;}
-.mode-count{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;flex-shrink:0;}
+.mode-name{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:3px;}
+.mode-desc{font-size:13px;color:#888;}
+.mode-count{font-size:13px;font-weight:700;padding:4px 11px;border-radius:99px;flex-shrink:0;}
 .mode-arrow{font-size:18px;color:#c5d8ee;flex-shrink:0;}
 .cat-panel{display:none;flex-direction:column;gap:5px;margin-top:7px;padding:10px;background:#f0f6fc;border-radius:13px;}
 .cat-panel.open{display:flex;}
@@ -226,7 +226,7 @@ body{
     <div class="hero-top">
       <div>
         <div class="hero-label">EISEI KANRISHA</div>
-        <div class="hero-title">第1種衛生管理者<br>○×チェック</div>
+        <div class="hero-title">第１種衛生管理者<br>一問一答問題集</div>
       </div>
       <div class="countdown-box">
         <div class="countdown-days" id="countdown-days">―</div>
@@ -258,7 +258,7 @@ body{
       </div>
       <div class="mode-card" onclick="toggleCat()">
         <div class="mode-icon" style="background:#e8f0fb;">📂</div>
-        <div class="mode-info"><div class="mode-name">カテゴリ別</div><div class="mode-desc">科目を選んで集中学習</div></div>
+        <div class="mode-info"><div class="mode-name">試験科目別</div><div class="mode-desc">試験科目を選んで集中学習</div></div>
         <span class="mode-count" style="background:#e8f0fb;color:#1e6fb5;">5科目</span>
         <div class="mode-arrow" id="cat-arrow">›</div>
       </div>
@@ -351,10 +351,10 @@ body{
 
 <script>
 const CATS={
-  "労働衛生（有害業務）":{short:"衛生①有害",color:"#D4537E",bar:"#D4537E"},
-  "労働衛生（有害業務以外）":{short:"衛生②以外",color:"#EF9F27",bar:"#EF9F27"},
-  "関係法令（有害業務）":{short:"法令①有害",color:"#1e6fb5",bar:"#1e6fb5"},
-  "関係法令（有害業務以外）":{short:"法令②以外",color:"#1D9E75",bar:"#1D9E75"},
+  "労働衛生（有害業務）":{short:"労働衛生（有害業務）",color:"#D4537E",bar:"#D4537E"},
+  "労働衛生（有害業務以外）":{short:"労働衛生（有害業務以外）",color:"#EF9F27",bar:"#EF9F27"},
+  "関係法令（有害業務）":{short:"関係法令（有害業務）",color:"#1e6fb5",bar:"#1e6fb5"},
+  "関係法令（有害業務以外）":{short:"関係法令（有害業務以外）",color:"#1D9E75",bar:"#1D9E75"},
   "労働生理":{short:"労働生理",color:"#7F77DD",bar:"#7F77DD"}
 };
 
