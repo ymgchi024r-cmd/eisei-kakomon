@@ -215,6 +215,75 @@ body{
 }
 .r-btn.primary{background:linear-gradient(90deg,#1e6fb5,#2e9cce);color:#fff;box-shadow:0 4px 14px rgba(30,111,181,.3);}
 .r-btn.danger{background:#fff5f5;color:#c0392b;border:1.5px solid #e24b4a;}
+
+
+
+/* ===== 広告エリア ===== */
+.ad-container{
+  background:#fff;border-radius:12px;
+  margin:16px 12px 0;
+  padding:10px 14px;
+  text-align:center;
+  border:0.5px solid #e0eaf5;
+  box-shadow:0 1px 4px rgba(30,111,181,.06);
+}
+.ad-label{font-size:10px;color:#bbb;margin-bottom:4px;letter-spacing:.08em;}
+.ad-placeholder{
+  background:linear-gradient(90deg,#f0f6ff,#e8f0fb);
+  border-radius:8px;height:60px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:#5a7fa0;font-weight:500;
+  border:0.5px dashed #b5d4f4;
+}
+
+/* ===== 通報モーダル ===== */
+.report-btn{
+  background:none;border:none;cursor:pointer;
+  font-size:11px;color:#bbb;padding:2px 4px;
+  margin-left:auto;display:flex;align-items:center;gap:3px;
+  flex-shrink:0;
+}
+.report-btn:hover{color:#e24b4a;}
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);
+  z-index:1000;display:flex;align-items:flex-end;justify-content:center;
+}
+.modal-sheet{
+  background:#fff;border-radius:20px 20px 0 0;
+  width:100%;max-width:430px;padding:20px 20px 40px;
+}
+.modal-handle{width:36px;height:4px;background:#e0e0e0;border-radius:99px;margin:0 auto 16px;}
+.modal-title{font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
+.modal-sub{font-size:12px;color:#888;margin-bottom:16px;}
+.modal-qinfo{
+  background:#f0f6ff;border-radius:9px;padding:9px 12px;
+  font-size:12px;color:#1e6fb5;margin-bottom:14px;line-height:1.6;
+}
+.modal-opts{display:flex;flex-direction:column;gap:0;}
+.modal-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 4px;border-bottom:0.5px solid #f0f0f0;cursor:pointer;
+}
+.modal-opt:last-child{border-bottom:none;}
+.modal-radio{
+  width:20px;height:20px;border-radius:50%;
+  border:1.5px solid #d0d0d0;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-radio.selected{border-color:#1e6fb5;background:#1e6fb5;}
+.modal-radio.selected::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;}
+.modal-opt-text{font-size:14px;color:#1a1a1a;}
+.modal-send{
+  width:100%;margin-top:16px;padding:14px;
+  background:linear-gradient(90deg,#1e6fb5,#2e9cce);
+  color:#fff;border:none;border-radius:12px;
+  font-size:15px;font-weight:700;cursor:pointer;
+}
+.modal-cancel{
+  width:100%;margin-top:8px;padding:10px;
+  background:none;border:none;color:#888;
+  font-size:14px;cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -321,6 +390,13 @@ body{
 
   <!-- 結果画面 -->
   <div class="q-scroll result-screen" id="result-screen">
+    <!-- 広告エリア（結果画面） -->
+    <div class="ad-container" id="result-ad">
+      <div class="ad-label">広告</div>
+      <!-- Google AdSense / AdMob タグをここに挿入 -->
+      <div class="ad-placeholder">Advertisement</div>
+    </div>
+    <div style="height:12px;"></div>
     <div class="result-circle">
       <div class="result-score" id="rs-score"></div>
       <div class="result-score-sub">正解</div>
@@ -344,6 +420,36 @@ body{
       </button>
     </div>
     <button id="btn-next" onclick="nextQ()">次へ →</button>
+  </div>
+</div>
+
+<!-- ===== 通報モーダル ===== -->
+<div class="modal-overlay" id="report-modal" style="display:none;" onclick="closeReportOnBg(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🚩 問題を報告</div>
+    <div class="modal-sub">内容を確認して修正いたします</div>
+    <div class="modal-qinfo" id="report-qinfo">問題情報を読み込み中...</div>
+    <div class="modal-opts" id="report-opts">
+      <div class="modal-opt" onclick="selectReport(this,0)">
+        <div class="modal-radio" id="radio-0"></div>
+        <div class="modal-opt-text">解答（正解・不正解）が間違っている</div>
+      </div>
+      <div class="modal-opt" onclick="selectReport(this,1)">
+        <div class="modal-radio" id="radio-1"></div>
+        <div class="modal-opt-text">解説の内容が不正確</div>
+      </div>
+      <div class="modal-opt" onclick="selectReport(this,2)">
+        <div class="modal-radio" id="radio-2"></div>
+        <div class="modal-opt-text">問題文に誤字・脱字がある</div>
+      </div>
+      <div class="modal-opt" onclick="selectReport(this,3)">
+        <div class="modal-radio" id="radio-3"></div>
+        <div class="modal-opt-text">その他</div>
+      </div>
+    </div>
+    <button class="modal-send" onclick="sendReport()">送信する</button>
+    <button class="modal-cancel" onclick="closeReport()">キャンセル</button>
   </div>
 </div>
 
@@ -1090,8 +1196,60 @@ function goHome(){
   buildHome();
 }
 
+/* ===== 通報機能 ===== */
+let reportSelectedIdx=-1;
+const REPORT_REASONS=[
+  '解答（正解・不正解）が間違っている',
+  '解説の内容が不正確',
+  '問題文に誤字・脱字がある',
+  'その他'
+];
+
+function openReport(){
+  if(typeof sessionOrder==='undefined'||sessionOrder.length===0)return;
+  const qIdx=sessionOrder[sessionIdx];
+  const q=Q[qIdx];
+  const shortB=q.b.length>50?q.b.substring(0,50)+'...':q.b;
+  document.getElementById('report-qinfo').textContent=
+    'No.'+(qIdx+1)+'｜'+q.c+'（'+q.y+'）\n'+shortB;
+  reportSelectedIdx=-1;
+  for(let i=0;i<4;i++) document.getElementById('radio-'+i).classList.remove('selected');
+  document.getElementById('report-modal').style.display='flex';
+}
+
+function closeReport(){
+  document.getElementById('report-modal').style.display='none';
+}
+
+function closeReportOnBg(e){
+  if(e.target===document.getElementById('report-modal')) closeReport();
+}
+
+function selectReport(el,idx){
+  reportSelectedIdx=idx;
+  for(let i=0;i<4;i++) document.getElementById('radio-'+i).classList.remove('selected');
+  document.getElementById('radio-'+idx).classList.add('selected');
+}
+
+function sendReport(){
+  if(reportSelectedIdx<0){alert('報告内容を選択してください');return;}
+  const qIdx=sessionOrder[sessionIdx];
+  const q=Q[qIdx];
+  const qinfo='No.'+(qIdx+1)+'｜'+q.c+'（'+q.y+'）｜'+q.b.substring(0,100);
+  const reason=REPORT_REASONS[reportSelectedIdx];
+  const url='https://docs.google.com/forms/d/e/1FAIpQLSfSGmxYYK5nG08QCNLyLHlx-8YmCdqhLzwUlLXt-4XyCb3koQ/viewform'
+    +'?usp=pp_url'
+    +'&entry.1942692426='+encodeURIComponent(qinfo)
+    +'&entry.1139822167='+encodeURIComponent(reason);
+  window.open(url,'_blank');
+  closeReport();
+  alert('ご報告ありがとうございます。\n確認の上、修正いたします。');
+}
+
+
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 buildHome();
+
 </script>
 </body>
 </html>
