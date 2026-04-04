@@ -1,22 +1,38 @@
 {
-  "name": "第1種衛生管理者 ○×チェック",
+  "name": "第１種衛生管理者 一問一答問題集",
   "short_name": "衛生管理者",
-  "description": "第1種衛生管理者試験の過去問○×チェックアプリ",
-  "start_url": "./index.html",
+  "description": "第１種衛生管理者試験の一問一答問題集。全500問・解説付き・完全無料。スキマ時間で合格を目指せます。",
+  "start_url": "/eisei-kakomon/",
+  "scope": "/eisei-kakomon/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#0b2d8f",
+  "theme_color": "#1e6fb5",
   "orientation": "portrait",
+  "lang": "ja",
+  "categories": [
+    "education"
+  ],
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "prefer_related_applications": false
 }
