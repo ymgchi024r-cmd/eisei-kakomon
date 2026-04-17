@@ -1,7 +1,7 @@
 {
   "name": "第１種衛生管理者 一問一答問題集",
   "short_name": "衛生管理者",
-  "description": "第１種衛生管理者試験の一問一答問題集。全500問・解説付き・完全無料。スキマ時間で合格を目指せます。",
+  "description": "第１種衛生管理者試験の○×問題集。全1716問・解説付き・完全無料。スキマ時間で合格を目指せます。",
   "start_url": "/eisei-kakomon/",
   "scope": "/eisei-kakomon/",
   "display": "standalone",
